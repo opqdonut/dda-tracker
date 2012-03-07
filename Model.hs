@@ -24,6 +24,6 @@ getAnswers conn name =
 
 putAnswers :: IConnection conn => conn -> String -> M.Map String String -> IO ()
 putAnswers conn name ans =
-    do s <- prepare conn "insert into answers values (?,?,?)"
+    do s <- prepare conn "insert or replace into answers values (?,?,?)"
        executeMany s [ map toSql [name, q, a] | (q,a) <- M.assocs ans ]
        commit conn
