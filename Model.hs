@@ -22,6 +22,10 @@ prepDB dbh =
                   \answer TEXT NOT NULL,\
                   \timestamp INTEGER)" []
           return ()
+     run dbh "CREATE TRIGGER IF NOT EXISTS log INSERT ON answers \
+             \FOR EACH ROW BEGIN \
+             \INSERT INTO log values (new.user, new.question, new.answer, strftime('%s','now')); \
+             \END" []
      commit dbh
 
 getAnswers :: IConnection conn => conn -> String -> IO (M.Map String String)
@@ -32,10 +36,8 @@ getAnswers conn name =
 putAnswers :: IConnection conn => conn -> String -> M.Map String String -> IO ()
 putAnswers conn name ans =
     do s <- prepare conn "insert or replace into answers values (?,?,?)"
-       l <- prepare conn "insert into log values (?,?,?,strftime('%s','now'))"
        let dat = [ map toSql [name, q, a] | (q,a) <- M.assocs ans ]
        executeMany s dat
-       executeMany l dat
        commit conn
 
 getStats :: IConnection conn => conn -> IO (M.Map (String,String) Int)
