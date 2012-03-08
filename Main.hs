@@ -28,7 +28,7 @@ processAnswers conn user = do ans <- mapM getAnswer questions
 userUrl name = do s <- scriptName
                   return $ s++"/"++name
                   
-goUser n = setStatus 303 "Redirect" >> userUrl n >>= redirect
+goUser n = setStatus 303 "See Other" >> userUrl n >>= redirect
 
 userHtml conn name = 
     do ans <- liftIO $ getAnswers conn name
