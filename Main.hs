@@ -69,7 +69,7 @@ mainPage conn = do mn <- getInput "name"
                               Just n  -> goUser n
 
 page t b = header << [thetitle << t,
-                      thelink noHtml ! [href "dda-tracker.css",
+                      thelink noHtml ! [href stylesheetName,
                                         rel "stylesheet",
                                         thetype "text/css"]]
            +++ body << (h1 << t +++ b)
