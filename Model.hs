@@ -20,7 +20,7 @@ prepDB dbh =
                   \user TEXT NOT NULL,\
                   \question TEXT NOT NULL,\
                   \answer TEXT NOT NULL,\
-                  \timestamp INTEGER PRIMARY KEY)" []
+                  \timestamp INTEGER)" []
           return ()
      commit dbh
 
