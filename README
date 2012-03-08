@@ -1,0 +1,18 @@
+Building
+========
+
+$ cabal configure
+$ cabal build
+
+You might need to install some dependencies, for example with:
+
+$ cabal install cgi HDBC HDBC-sqlite3 xhtml
+
+Installing
+==========
+
+After building, dist/build/dda-tracker/dda-tracker is a cgi executable
+that can be copied anywhere. It will create a database "answers.db" in
+the same directory as it resides in.
+
+The cgi script need PathInfo, which apache provides by default.
