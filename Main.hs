@@ -13,8 +13,8 @@ answers = ["a"++show i | i <- [1..6]]
 
 qtable f = table << [h, concatHtml $ map row questions]
   where h = tr ! [strAttr "class" "header"] << map (td<<) ("":answers)
-        row q  = tr ! [strAttr "class" q] << [td ! [strAttr "class" "sider"] << q, concatHtml $ map (cell q) answers]
-        cell q a = td ! [strAttr "class" a] << f q a
+        row q  = tr ! [strAttr "class" q] << [td ! [strAttr "class" "sider"] << q,
+                                              concatHtml $ map (f q) answers]
 
 stat s q a = thespan ! [strAttr "class" "count"] << show (M.findWithDefault 0 (q,a) s)
 
@@ -31,8 +31,11 @@ userUrl name = do s <- scriptName
 userHtml conn name = 
     do ans <- liftIO $ getAnswers conn name
        stats <- liftIO $ getStats conn
-       let r q a | M.lookup q ans == Just a   = radio q a ! [strAttr "checked" "true"] +++ stat stats q a
-                 | otherwise                  = radio q a +++ stat stats q a
+       let r q a
+             | M.lookup q ans == Just a = td ! [strAttr "class" (a++" selected")]
+                                          << [radio q a ! [strAttr "checked" "true"], stat stats q a]
+             | otherwise                = td ! [strAttr "class" a]
+                                          << [radio q a, stat stats q a]
        u <- userUrl name
        return $ paragraph << ("Hello " ++ name ++ "!") 
                 +++
@@ -51,13 +54,17 @@ mainHtml c = do s <- scriptName
                     << [paragraph << ("Name: " +++ textfield "name"),
                         submit "" "Login"]
                   +++
-                  qtable (stat stats)
+                  qtable (\q a -> td ! [strAttr "class" a] << stat stats q a)
 
 mainPage conn = do mn <- getInput "name"
                    case mn of Nothing -> mainHtml conn >>= out
                               Just n  -> setStatus 301 "Redirect" >> userUrl n >>= redirect
 
-page t b = header << thetitle << t +++ body << (h1 << t +++ b)
+page t b = header << [thetitle << t,
+                      thelink noHtml ! [strAttr "href" "dda-tracker.css",
+                                        strAttr "rel" "stylesheet",
+                                        strAttr "type" "text/css"]]
+           +++ body << (h1 << t +++ b)
 
 out :: Html -> CGI CGIResult
 out = output . renderHtml . page "DDA-Tracker"
