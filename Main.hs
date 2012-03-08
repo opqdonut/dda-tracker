@@ -9,7 +9,7 @@ import qualified Data.Map as M
 import Model
 import Config
 
-questions = ["1."++show i | i <- [1..10]] ++ ["2."++show i | i <- [1..10]] ++ ["3."++show i | i <- [1..15]]
+questions = ["1."++show i | i <- [1..10]] ++ ["2."++show i | i <- [1..7]] ++ ["3."++show i | i <- [1..15]]
 answers = ["-", "A", "B", "C", "D", "E", "X"]
 
 dClassName d [] = []
