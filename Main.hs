@@ -12,9 +12,9 @@ questions = ["ex"++show i | i <- [1..3]]
 answers = ["a"++show i | i <- [1..6]]
 
 qtable f = table << [h, concatHtml $ map row questions]
-  where h = tr ! [strAttr "id" "header"] << map (td<<) ("":answers)
-        row q  = tr ! [strAttr "class" q] << [td << q, concatHtml $ map (cell q) answers]
-        cell q a = td ! [strAttr "id" a] << f q a
+  where h = tr ! [strAttr "class" "header"] << map (td<<) ("":answers)
+        row q  = tr ! [strAttr "class" q] << [td ! [strAttr "class" "sider"] << q, concatHtml $ map (cell q) answers]
+        cell q a = td ! [strAttr "class" a] << f q a
 
 stat s q a = thespan ! [strAttr "class" "count"] << show (M.findWithDefault 0 (q,a) s)
 
