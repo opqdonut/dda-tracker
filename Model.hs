@@ -12,7 +12,7 @@ prepDB dbh =
        do run dbh "CREATE TABLE answers (\
                   \user TEXT NOT NULL,\
                   \question TEXT NOT NULL,\
-                  \answer TEXT NOT NULL,\
+                  \answer TEXT,\
                   \PRIMARY KEY (user,question))" []
           return ()
      when (not ("log" `elem` tables)) $
@@ -22,12 +22,8 @@ prepDB dbh =
                   \answer TEXT NOT NULL,\
                   \timestamp INTEGER)" []
           return ()
-     run dbh "CREATE TRIGGER IF NOT EXISTS logu UPDATE ON answers \
+     run dbh "CREATE TRIGGER IF NOT EXISTS log UPDATE ON answers \
              \FOR EACH ROW WHEN old.answer != new.answer BEGIN \
-             \INSERT INTO log values (new.user, new.question, new.answer, strftime('%s','now')); \
-             \END" []
-     run dbh "CREATE TRIGGER IF NOT EXISTS logi INSERT ON answers \
-             \FOR EACH ROW BEGIN \
              \INSERT INTO log values (new.user, new.question, new.answer, strftime('%s','now')); \
              \END" []
      commit dbh
@@ -39,10 +35,12 @@ getAnswers conn name =
 
 putAnswers :: IConnection conn => conn -> String -> M.Map String String -> IO ()
 putAnswers conn name ans =
-    do s <- prepare conn "insert or replace into answers values (?,?,?)"
-       let dat = [ map toSql [name, q, a] | (q,a) <- M.assocs ans ]
-       executeMany s dat
+    do i <- prepare conn "insert or ignore into answers (user,question) values (?,?)"
+       executeMany i (map tail dat)
+       u <- prepare conn "update answers set answer = ? where user = ? and question = ?"
+       executeMany u dat
        commit conn
+  where dat = [ [toSql a, toSql name, toSql q] | (q,a) <- M.assocs ans ]
 
 getStats :: IConnection conn => conn -> IO (M.Map (String,String) Int)
 getStats conn =
