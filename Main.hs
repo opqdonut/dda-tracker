@@ -58,7 +58,7 @@ mainHtml c = do s <- scriptName
 
 mainPage conn = do mn <- getInput "name"
                    case mn of Nothing -> mainHtml conn >>= out
-                              Just n  -> setStatus 301 "Redirect" >> userUrl n >>= redirect
+                              Just n  -> setStatus 303 "Redirect" >> userUrl n >>= redirect
 
 page t b = header << [thetitle << t,
                       thelink noHtml ! [href "dda-tracker.css",
