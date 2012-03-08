@@ -27,6 +27,8 @@ processAnswers conn user = do ans <- mapM getAnswer questions
 
 userUrl name = do s <- scriptName
                   return $ s++"/"++name
+                  
+goUser n = setStatus 303 "Redirect" >> userUrl n >>= redirect
 
 userHtml conn name = 
     do ans <- liftIO $ getAnswers conn name
@@ -44,8 +46,8 @@ userHtml conn name =
                        submit "" "Save"]
 
 userPage conn name = do m <- requestMethod
-                        when (m=="POST") $ processAnswers conn name
-                        userHtml conn name >>= out
+                        case m of "POST" -> processAnswers conn name >> goUser name
+                                  "GET" -> userHtml conn name >>= out
                         
 mainHtml c = do s <- scriptName
                 stats <- liftIO $ getStats c
@@ -58,7 +60,7 @@ mainHtml c = do s <- scriptName
 
 mainPage conn = do mn <- getInput "name"
                    case mn of Nothing -> mainHtml conn >>= out
-                              Just n  -> setStatus 303 "Redirect" >> userUrl n >>= redirect
+                              Just n  -> goUser n
 
 page t b = header << [thetitle << t,
                       thelink noHtml ! [href "dda-tracker.css",
