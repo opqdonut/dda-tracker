@@ -1,12 +1,13 @@
 module Main where
 
+import Control.Monad
 import Network.CGI
 import Text.XHtml
 import Database.HDBC.Sqlite3 (connectSqlite3) 
 import qualified Data.Map as M
 
 import Model
- 
+
 questions = ["ex"++show i | i <- [1..3]]
 answers = ["a"++show i | i <- [1..6]]
 
@@ -24,23 +25,23 @@ processAnswers conn user = do ans <- mapM getAnswer questions
                               let ans' = M.fromList [(q,a) | (q,Just a) <- ans]
                               liftIO $ putAnswers conn user ans'
 
+userUrl name = do s <- scriptName
+                  return $ s++"/"++name
+
 userHtml conn name = 
     do ans <- liftIO $ getAnswers conn name
        stats <- liftIO $ getStats conn
        let r q a | M.lookup q ans == Just a   = radio q a ! [strAttr "checked" "true"] +++ stat stats q a
                  | otherwise                  = radio q a +++ stat stats q a
-       s <- scriptName
+       u <- userUrl name
        return $ paragraph << ("Hello " ++ name ++ "!") 
-                +++ pre << show ans
                 +++
-                form ! [strAttr "method" "post", strAttr "action" (s++"/"++name)]
+                form ! [strAttr "method" "post", strAttr "action" u]
                    << [qtable r,
                        submit "" "Save"]
 
 userPage conn name = do m <- requestMethod
-                        case m of
-                          "GET" -> return ()
-                          "POST" -> processAnswers conn name
+                        when (m=="POST") $ processAnswers conn name
                         userHtml conn name >>= out
                         
 mainHtml c = do s <- scriptName
@@ -48,19 +49,18 @@ mainHtml c = do s <- scriptName
                 return $
                   form ! [strAttr "method" "get", strAttr "action" s]
                     << [paragraph << ("Name: " +++ textfield "name"),
-                        submit "" "Submit"]
+                        submit "" "Login"]
                   +++
                   qtable (stat stats)
 
 mainPage conn = do mn <- getInput "name"
-                   s <- scriptName
                    case mn of Nothing -> mainHtml conn >>= out
-                              Just n  -> setStatus 301 "Redirect" >> redirect (s++"/"++n)
+                              Just n  -> setStatus 301 "Redirect" >> userUrl n >>= redirect
 
-page t b = header << thetitle << t +++ body << b
+page t b = header << thetitle << t +++ body << (h1 << t +++ b)
 
 out :: Html -> CGI CGIResult
-out = output . renderHtml . page "Questionnaire"
+out = output . renderHtml . page "DDA-Tracker"
 
 cgiMain :: CGI CGIResult 
 cgiMain = do c <- liftIO $ connectSqlite3 "answers.db"
