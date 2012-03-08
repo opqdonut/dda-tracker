@@ -22,7 +22,11 @@ prepDB dbh =
                   \answer TEXT NOT NULL,\
                   \timestamp INTEGER)" []
           return ()
-     run dbh "CREATE TRIGGER IF NOT EXISTS log INSERT ON answers \
+     run dbh "CREATE TRIGGER IF NOT EXISTS logu UPDATE ON answers \
+             \FOR EACH ROW WHEN old.answer != new.answer BEGIN \
+             \INSERT INTO log values (new.user, new.question, new.answer, strftime('%s','now')); \
+             \END" []
+     run dbh "CREATE TRIGGER IF NOT EXISTS logi INSERT ON answers \
              \FOR EACH ROW BEGIN \
              \INSERT INTO log values (new.user, new.question, new.answer, strftime('%s','now')); \
              \END" []
