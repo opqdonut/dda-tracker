@@ -22,7 +22,9 @@ qtable f = table << [h, concatHtml $ map row questions]
         row q  = tr ! [theclass (className "q" q)] << [td ! [theclass "sider"] << q,
                                               concatHtml $ map (f q) answers]
 
-stat s q a = thespan ! [theclass "count"] << show (M.findWithDefault 0 (q,a) s)
+stat s q a = thespan ! [theclass ("count count-"++x)] << x
+ where x = show (M.findWithDefault 0 (q,a) s)
+                
 
 getAnswer q = do x <- getInput q
                  return (q,x)
