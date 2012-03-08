@@ -7,6 +7,7 @@ import Database.HDBC.Sqlite3 (connectSqlite3)
 import qualified Data.Map as M
 
 import Model
+import Config
 
 questions = ["1."++show i | i <- [1..10]] ++ ["2."++show i | i <- [1..10]] ++ ["3."++show i | i <- [1..15]]
 answers = ["-", "A", "B", "C", "D", "E", "X"]
@@ -77,7 +78,7 @@ out :: Html -> CGI CGIResult
 out = output . renderHtml . page "DDA-Tracker"
 
 cgiMain :: CGI CGIResult 
-cgiMain = do c <- liftIO $ connectSqlite3 "answers.db"
+cgiMain = do c <- liftIO $ connectSqlite3 dbName
              liftIO $ prepDB c
              p <- pathInfo
              case p of ""       -> mainPage c
