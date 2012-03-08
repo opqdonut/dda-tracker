@@ -9,9 +9,6 @@ import qualified Data.Map as M
 import Model
 import Config
 
-questions = ["1."++show i | i <- [1..10]] ++ ["2."++show i | i <- [1..7]] ++ ["3."++show i | i <- [1..15]]
-answers = ["-", "A", "B", "C", "D", "E", "X"]
-
 dClassName d [] = []
 dClassName d (c:s) | c `elem` ['a'..'z']++['A'..'Z']++['0'..'9'] = d ++ [c] ++ dClassName "" s
                    | otherwise = dClassName "-" s
@@ -76,7 +73,7 @@ page t b = header << [thetitle << t,
            +++ body << (h1 << t +++ b)
 
 out :: Html -> CGI CGIResult
-out = output . renderHtml . page "DDA-Tracker"
+out = output . renderHtml . page pageTitle
 
 cgiMain :: CGI CGIResult 
 cgiMain = do c <- liftIO $ connectSqlite3 dbName
