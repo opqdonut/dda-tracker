@@ -2,7 +2,7 @@ module Main where
 
 import Control.Monad
 import Network.CGI
-import Text.XHtml
+import Text.XHtml.Strict
 import Database.HDBC.Sqlite3 (connectSqlite3) 
 import qualified Data.Map as M
 
@@ -12,11 +12,11 @@ questions = ["ex"++show i | i <- [1..3]]
 answers = ["a"++show i | i <- [1..6]]
 
 qtable f = table << [h, concatHtml $ map row questions]
-  where h = tr ! [strAttr "class" "header"] << map (td<<) ("":answers)
-        row q  = tr ! [strAttr "class" q] << [td ! [strAttr "class" "sider"] << q,
+  where h = tr ! [theclass "header"] << map (td<<) ("":answers)
+        row q  = tr ! [theclass q] << [td ! [theclass "sider"] << q,
                                               concatHtml $ map (f q) answers]
 
-stat s q a = thespan ! [strAttr "class" "count"] << show (M.findWithDefault 0 (q,a) s)
+stat s q a = thespan ! [theclass "count"] << show (M.findWithDefault 0 (q,a) s)
 
 getAnswer q = do x <- getInput q
                  return (q,x)
@@ -32,14 +32,14 @@ userHtml conn name =
     do ans <- liftIO $ getAnswers conn name
        stats <- liftIO $ getStats conn
        let r q a
-             | M.lookup q ans == Just a = td ! [strAttr "class" (a++" selected")]
-                                          << [radio q a ! [strAttr "checked" "true"], stat stats q a]
-             | otherwise                = td ! [strAttr "class" a]
+             | M.lookup q ans == Just a = td ! [theclass (a++" selected")]
+                                          << [radio q a ! [checked], stat stats q a]
+             | otherwise                = td ! [theclass a]
                                           << [radio q a, stat stats q a]
        u <- userUrl name
        return $ paragraph << ("Hello " ++ name ++ "!") 
                 +++
-                form ! [strAttr "method" "post", strAttr "action" u]
+                form ! [method "post", action u]
                    << [qtable r,
                        submit "" "Save"]
 
@@ -50,20 +50,20 @@ userPage conn name = do m <- requestMethod
 mainHtml c = do s <- scriptName
                 stats <- liftIO $ getStats c
                 return $
-                  form ! [strAttr "method" "get", strAttr "action" s]
+                  form ! [method "get", action s]
                     << [paragraph << ("Name: " +++ textfield "name"),
                         submit "" "Login"]
                   +++
-                  qtable (\q a -> td ! [strAttr "class" a] << stat stats q a)
+                  qtable (\q a -> td ! [theclass a] << stat stats q a)
 
 mainPage conn = do mn <- getInput "name"
                    case mn of Nothing -> mainHtml conn >>= out
                               Just n  -> setStatus 301 "Redirect" >> userUrl n >>= redirect
 
 page t b = header << [thetitle << t,
-                      thelink noHtml ! [strAttr "href" "dda-tracker.css",
-                                        strAttr "rel" "stylesheet",
-                                        strAttr "type" "text/css"]]
+                      thelink noHtml ! [href "dda-tracker.css",
+                                        rel "stylesheet",
+                                        thetype "text/css"]]
            +++ body << (h1 << t +++ b)
 
 out :: Html -> CGI CGIResult
