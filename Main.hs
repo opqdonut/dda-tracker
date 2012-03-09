@@ -5,14 +5,14 @@ import Network.CGI
 import Text.XHtml.Strict
 import Database.HDBC.Sqlite3 (connectSqlite3) 
 import qualified Data.Map as M
+import Data.Char
 
 import Model
 import Config
 
-dClassName d [] = []
-dClassName d (c:s) | c `elem` ['a'..'z']++['A'..'Z']++['0'..'9'] = d ++ [c] ++ dClassName "" s
-                   | otherwise = dClassName "-" s
-className prefix suffix = prefix ++ dClassName "-" suffix
+className prefix suffix = prefix ++ "-" ++ map clean suffix
+  where clean c | isAlphaNum c = c
+                | otherwise    = '-'
 
 qtable f = table << [h, concatHtml $ map row questions]
   where h = tr ! [theclass "header"] << map (td<<) ("":answers)
