@@ -5,6 +5,8 @@ import Network.CGI
 import Text.XHtml.Strict
 import Database.HDBC.Sqlite3 (connectSqlite3) 
 import qualified Data.Map as M
+import Numeric
+import System.Random
 
 import Model
 import Config
@@ -44,11 +46,14 @@ userHtml conn name =
              | otherwise                = td ! [theclass (className "a" a)]
                                           << [radio q a, stat stats q a]
        u <- userUrl name
-       return $ paragraph << ("Hello " ++ name ++ "!") 
+       uri <- fmap show $ requestURI
+       return $ paragraph << "You should bookmark this page immediately so that you can return to update your answers!" 
+                +++
+                paragraph << ("The URL of this page is: " +++ tt << uri)
                 +++
                 form ! [method "post", action u]
                    << [qtable r,
-                       paragraph << (submit "" "Save")]
+                       paragraph << submit "" "Save"]
 
 userPage conn name = do m <- requestMethod
                         case m of "POST" -> processAnswers conn name >> goUser name
@@ -57,14 +62,21 @@ userPage conn name = do m <- requestMethod
 mainHtml c = do s <- scriptName
                 stats <- liftIO $ getStats c
                 return $
-                  form ! [method "get", action s]
-                    << paragraph << ("Name: " +++ textfield "name" +++ " " +++ submit "" "Login")
+                  form ! [method "post", action s]
+                    << paragraph << submit "" "Generate new private url"
                   +++
                   qtable (\q a -> td ! [theclass (className "a" a)] << stat stats q a)
 
-mainPage conn = do mn <- getInput "name"
-                   case mn of Nothing -> mainHtml conn >>= out
-                              Just n  -> goUser n
+generateUser = do i <- liftIO $ randomRIO (0,idMax)
+                  return $ showHex i ""
+
+mainPage conn = do m <- requestMethod
+                   case m of "POST" -> generateUser >>= goUser
+                             "GET"  -> mainHtml conn >>= out 
+
+errorPage = out $ h1 << "Error!"
+                  +++
+                  p << "Invalid url :("
 
 page t b = header << [thetitle << t,
                       thelink noHtml ! [href stylesheetName,
@@ -80,6 +92,7 @@ cgiMain = do c <- liftIO $ connectSqlite3 dbName
              liftIO $ prepDB c
              p <- pathInfo
              case p of ""       -> mainPage c
+                       "/"      -> errorPage
                        '/':user -> userPage c user
  
 main = runCGI $ handleErrors cgiMain

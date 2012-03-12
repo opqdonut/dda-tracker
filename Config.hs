@@ -6,3 +6,6 @@ pageTitle = "DDA-Tracker"
 
 dbName = "answers.db"
 stylesheetName = "dda-tracker.css"
+
+idMax :: Integer
+idMax = 2^64
