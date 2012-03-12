@@ -23,7 +23,7 @@ prepDB dbh =
                   \timestamp INTEGER)" []
           return ()
      run dbh "CREATE TRIGGER IF NOT EXISTS log UPDATE ON answers \
-             \FOR EACH ROW WHEN old.answer != new.answer BEGIN \
+             \FOR EACH ROW WHEN old.answer != new.answer OR old.answer IS NULL BEGIN \
              \INSERT INTO log values (new.user, new.question, new.answer, strftime('%s','now')); \
              \END" []
      commit dbh
